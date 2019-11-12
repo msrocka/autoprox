@@ -74,7 +74,7 @@ fun generateProxy(flow: Flow, products: List<Flow>, db: IDatabase) {
 
     val allBigrams = { s: String ->
         val bgs = mutableListOf<String>()
-        for (word in words(s)) {
+        for (word in words(stripCommonQualifiers(s))) {
             bgs.addAll(bigrams(word))
         }
         bgs
@@ -93,7 +93,7 @@ fun generateProxy(flow: Flow, products: List<Flow>, db: IDatabase) {
         return
     }
     matchFactors = matchFactors.filter { (_, factor) ->
-        factor / maxFactor > 0.1
+        factor / maxFactor > 0.5
     }
     val factorsTotal = matchFactors.values.fold(.0, { a, b -> a + b })
     val proxy = initProxy(flow, db)

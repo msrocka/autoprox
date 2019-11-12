@@ -65,3 +65,25 @@ fun dice(a: List<String>, b: List<String>): Double {
     val total = a.size + b.size
     return 2 * matched / total.toDouble()
 }
+
+fun stripCommonQualifiers(s: String): String {
+    var feed = s.trim().toLowerCase()
+    val qualifiers = arrayOf(
+        "at industrial user",
+        "at grid",
+        "at manufacturer",
+        "at plant",
+        "at power plant",
+        "at production facility",
+        "at regional storehouse",
+        "production mix",
+        "average",
+        "at conversion plant",
+        "production, average",
+        "at field"
+    )
+    for (q in qualifiers) {
+        feed = feed.replace(q, "")
+    }
+    return feed
+}
