@@ -22,7 +22,7 @@ fun main() {
         println("Could not find process with id = ${procID} in database")
         return
     }
-    println("Try to generate proxy processes for: ${process.name}")
+    println("Try to generate bridge processes for: ${process.name}")
 
     // flowProviders contains the products (or waste flows) for
     // which there is a provider (or treatment process) in the database
@@ -45,7 +45,7 @@ fun main() {
             // there is already a provider for the given flow
             continue
         }
-        generateProxy(e.flow, products, db)
+        generateBridge(e.flow, products, db)
     }
 }
 
@@ -59,7 +59,7 @@ fun isLinkable(e: Exchange): Boolean {
     return false
 }
 
-fun generateProxy(flow: Flow, products: List<Flow>, db: IDatabase) {
+fun generateBridge(flow: Flow, products: List<Flow>, db: IDatabase) {
     val candidates = products.filter { p ->
         p.flowType == flow.flowType
                 && Objects.equals(
@@ -96,24 +96,24 @@ fun generateProxy(flow: Flow, products: List<Flow>, db: IDatabase) {
         factor / maxFactor > 0.5
     }
     val factorsTotal = matchFactors.values.fold(.0, { a, b -> a + b })
-    val proxy = initProxy(flow, db)
+    val bridge = initBridge(flow, db)
 
     for (candidate in candidates) {
         val factor = matchFactors[candidate.id] ?: continue
-        val exchange = proxy.exchange(candidate)
+        val exchange = bridge.exchange(candidate)
         exchange.isInput = flow.flowType == FlowType.PRODUCT_FLOW
         exchange.amount = factor / factorsTotal
     }
 
-    ProcessDao(db).insert(proxy)
-    println("Created proxy process ${proxy.name}")
+    ProcessDao(db).insert(bridge)
+    println("Created bridge process ${bridge.name}")
 }
 
-fun initProxy(flow: Flow, db: IDatabase): Process{
+fun initBridge(flow: Flow, db: IDatabase): Process{
     val p = Process()
-    p.category = CategoryDao(db).sync(ModelType.PROCESS, "_proxies")
+    p.category = CategoryDao(db).sync(ModelType.PROCESS, "_bridge")
     p.refId = UUID.randomUUID().toString()
-    p.name = "_proxy: ${flow.name}"
+    p.name = "_bridge: ${flow.name}"
     p.processType = ProcessType.UNIT_PROCESS
     val qref = p.exchange(flow)
     qref.isInput = flow.flowType == FlowType.WASTE_FLOW
