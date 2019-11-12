@@ -10,6 +10,7 @@ import org.openlca.core.model.Flow
 import org.openlca.core.model.FlowType
 import java.io.File
 import java.util.*
+import kotlin.math.max
 
 fun main() {
     val dbPath = "C:/Users/Besitzer/openLCA-data-1.4/databases/zauto_bridge_test"
@@ -71,6 +72,30 @@ fun generateProxy(flow: Flow, products: List<Flow>) {
     if (candidates.isEmpty()) {
         println("No matching flows with type and unit found for: ${flow.name}")
         return
+    }
+
+    val allBigrams = { s: String ->
+        val bgs = mutableListOf<String>()
+        for (word in words(s)) {
+            bgs.addAll(bigrams(word))
+        }
+        bgs
+    }
+    val flowBigrams = allBigrams(flow.name)
+    var matchFactors: Map<Long, Double> = candidates.fold(
+        mutableMapOf(), { map, candidate ->
+            val candBigrams = allBigrams(candidate.name)
+            map[candidate.id] = dice(flowBigrams, candBigrams)
+            map
+        })
+
+    val maxFactor = matchFactors.values.fold(.0, { a, b -> max(a, b) })
+    if (maxFactor == .0) {
+        println("No match factor > 0 found for: ${flow.name}")
+        return
+    }
+    matchFactors = matchFactors.filter { (_, factor) ->
+        factor / maxFactor > 0.1
     }
 
 
