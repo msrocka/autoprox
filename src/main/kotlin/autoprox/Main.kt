@@ -1,13 +1,13 @@
 package autoprox
 
+import org.openlca.core.database.CategoryDao
 import org.openlca.core.database.FlowDao
+import org.openlca.core.database.IDatabase
 import org.openlca.core.database.ProcessDao
 import org.openlca.core.database.derby.DerbyDatabase
 import org.openlca.core.matrix.ProcessProduct
 import org.openlca.core.matrix.cache.ProcessTable
-import org.openlca.core.model.Exchange
-import org.openlca.core.model.Flow
-import org.openlca.core.model.FlowType
+import org.openlca.core.model.*
 import java.io.File
 import java.util.*
 import kotlin.math.max
@@ -45,7 +45,7 @@ fun main() {
             // there is already a provider for the given flow
             continue
         }
-        generateProxy(e.flow, products)
+        generateProxy(e.flow, products, db)
     }
 }
 
@@ -59,9 +59,7 @@ fun isLinkable(e: Exchange): Boolean {
     return false
 }
 
-fun generateProxy(flow: Flow, products: List<Flow>) {
-    val isWaste = flow.flowType == FlowType.WASTE_FLOW
-
+fun generateProxy(flow: Flow, products: List<Flow>, db: IDatabase) {
     val candidates = products.filter { p ->
         p.flowType == flow.flowType
                 && Objects.equals(
@@ -97,7 +95,28 @@ fun generateProxy(flow: Flow, products: List<Flow>) {
     matchFactors = matchFactors.filter { (_, factor) ->
         factor / maxFactor > 0.1
     }
+    val factorsTotal = matchFactors.values.fold(.0, { a, b -> a + b })
+    val proxy = initProxy(flow, db)
 
+    for (candidate in candidates) {
+        val factor = matchFactors[candidate.id] ?: continue
+        val exchange = proxy.exchange(candidate)
+        exchange.isInput = flow.flowType == FlowType.PRODUCT_FLOW
+        exchange.amount = factor / factorsTotal
+    }
 
+    ProcessDao(db).insert(proxy)
+    println("Created proxy process ${proxy.name}")
+}
 
+fun initProxy(flow: Flow, db: IDatabase): Process{
+    val p = Process()
+    p.category = CategoryDao(db).sync(ModelType.PROCESS, "_proxies")
+    p.refId = UUID.randomUUID().toString()
+    p.name = "_proxy: ${flow.name}"
+    p.processType = ProcessType.UNIT_PROCESS
+    val qref = p.exchange(flow)
+    qref.isInput = flow.flowType == FlowType.WASTE_FLOW
+    p.quantitativeReference = qref
+    return p
 }
