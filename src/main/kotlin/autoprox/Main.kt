@@ -1,6 +1,8 @@
 package autoprox
 
+import org.openlca.core.database.ProcessDao
 import org.openlca.core.database.derby.DerbyDatabase
+import org.openlca.core.matrix.cache.ProcessTable
 import java.io.File
 
 fun main() {
@@ -8,7 +10,11 @@ fun main() {
     val procID = "16cb496c-497f-3595-ba7d-df4e255c4b6c"
     val db = DerbyDatabase(File(dbPath))
 
+    val providers = ProcessTable.create(db).providers
+    val process = ProcessDao(db).getForRefId(procID)
 
-    println("Hello, World")
+
+    print(process.name)
 }
+
 
