@@ -2,3 +2,6 @@
 /.idea/
 *.iml
 *.log
+
+src/main/resources/wnjpn.db
+src/main/resources/*.conf

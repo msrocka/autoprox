@@ -119,7 +119,7 @@ class Generator(
         }
 
         // calculate and filter the scores
-        var allScores = matcher.getScores(flow)
+        val allScores = matcher.getScores(flow)
         var scores: Map<Long, Double> = candidates.fold(mutableMapOf(),
             { map, candidate ->
                 val score = allScores.getOrDefault(candidate.id, .0)
