@@ -128,7 +128,7 @@ class Generator(
                 }
                 map
             })
-        val maxScore = scores.values.reduce { a, b -> max(a, b) }
+        val maxScore = scores.values.fold(.0, { a, b -> max(a, b) })
         if (maxScore == .0) {
             log.warn(
                 "No matching score > 0 found for: {}",

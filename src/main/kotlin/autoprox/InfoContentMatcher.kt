@@ -6,8 +6,6 @@ import kotlin.math.exp
 class InfoContentMatcher : Matcher {
 
     val alpha = 0.1
-    val substringFactor = 0.01
-
     private val wordFrequencies = mutableMapOf<String, Double>()
     private val candidateWords = mutableMapOf<Long, List<String>>()
 
@@ -26,42 +24,34 @@ class InfoContentMatcher : Matcher {
         val flowWords = words(flow.name)
         if (flowWords.isEmpty())
             return emptyMap()
-        val maxScore = flowWords.fold(0.0, { s, flowWord ->
-            s + flowWord.length.toDouble() * exp(-alpha)
+        val maxScore = flowWords.fold(.0, { s, word ->
+            s + (word.length.toDouble() * exp(-alpha))
         })
+
         return candidateWords.entries.fold(
             mutableMapOf(), { map, (candidateID, candidateWords) ->
-                var totalScore = .0
+                var candidateScore = .0
                 for (flowWord in flowWords) {
                     var wordScore = .0
                     for (candWord in candidateWords) {
                         if (flowWord == candWord) {
-                            wordScore = candWord.length.toDouble() * exp(
-                                -alpha * wordFrequencies.getOrDefault(candWord, 1.0)
-                            )
+                            wordScore = infoContent(candWord)
                             break
                         }
-                        var (smaller, larger) = if (candWord.length < flowWord.length) {
-                            Pair(candWord, flowWord)
-                        } else {
-                            Pair(flowWord, candWord)
-                        }
-                        if (larger.contains(smaller)) {
-                            // substring match
-                            val s = substringFactor * smaller.length.toDouble() * exp(
-                                -alpha * wordFrequencies.getOrDefault(candWord, 1.0)
-                            )
-                            if (s > wordScore) {
-                                wordScore = s
-                            }
-                        }
                     }
-                    totalScore += wordScore
+                    candidateScore += wordScore
                 }
-                if (totalScore > 0.0) {
-                    map[candidateID] = totalScore / maxScore
+                if (candidateScore > 0.0) {
+                    map[candidateID] = candidateScore / maxScore
                 }
                 map
             })
+    }
+
+    private fun infoContent(word: String): Double {
+        val freq = wordFrequencies[word] ?: 0.0
+        if (freq == .0)
+            return .0
+        return word.length * exp(-alpha * freq)
     }
 }
