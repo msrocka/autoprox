@@ -3,26 +3,36 @@ package autoprox
 /**
  * Extracts the words from the given string where we define
  * a word to be a sequence of letters, digits, or characters
- * like `-`. The single words are all in lower case.
+ * like `-` with at least on letter. The words will returned
+ * in lower case and without leading and trailing whitespaces.
  */
 fun words(s: String?): List<String> {
     if (s == null || s.isEmpty())
         return emptyList()
 
     var buf = StringBuilder()
+    var hasLetter = false
     val words = ArrayList<String>()
     for (c in s.toLowerCase().toCharArray()) {
-        if (Character.isLetterOrDigit(c) || c == '-') {
+        if (Character.isLetter(c)) {
+            hasLetter = true
+            buf.append(c)
+        } else if (Character.isDigit(c) || c == '-') {
             buf.append(c)
         } else if (buf.isNotEmpty()) {
             val word = buf.toString()
+            if (hasLetter) {
+                words.add(word)
+            }
             buf = StringBuilder()
-            words.add(word)
+            hasLetter = false
         }
     }
     if (buf.isNotEmpty()) {
         val word = buf.toString()
-        words.add(word)
+        if (hasLetter) {
+            words.add(word)
+        }
     }
     return words
 }
