@@ -9,6 +9,7 @@ import org.openlca.core.matrix.cache.ProcessTable
 import org.openlca.core.model.*
 import org.slf4j.LoggerFactory
 import java.util.*
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.pow
 
@@ -19,6 +20,14 @@ class Generator(
     private val db: IDatabase,
     private val matcher: Matcher
 ) {
+
+    /**
+     * epsilon describes the range of matching scores that is
+     * included for generating the flow list from the candidates:
+     * every candidate c with a relative score
+     * s_c/maxScore >= 1 - epsilon is included.
+     */
+    var epsilon = 0.2
 
     private val log = LoggerFactory.getLogger(Generator::class.java)
 
@@ -109,8 +118,16 @@ class Generator(
             return
         }
 
-        var scores = matcher.getScores(flow)
-
+        // calculate and filter the scores
+        var allScores = matcher.getScores(flow)
+        var scores: Map<Long, Double> = candidates.fold(mutableMapOf(),
+            { map, candidate ->
+                val score = allScores.getOrDefault(candidate.id, .0)
+                if (score > .0) {
+                    map[candidate.id] = score
+                }
+                map
+            })
         val maxScore = scores.values.reduce { a, b -> max(a, b) }
         if (maxScore == .0) {
             log.warn(
@@ -119,19 +136,19 @@ class Generator(
             )
             return
         }
-        scores = scores.filter { (_, factor) ->
-            factor / maxScore > 0.5
+        scores = scores.filter { (_, score) ->
+            abs(1.0 - (score / maxScore)) <= epsilon
         }
         val scoresTotal = scores.values.reduce { a, b -> a + b }
-        val bridge = initBridge(flow, db)
 
+        // generate the bridge process
+        val bridge = initBridge(flow, db)
         for (candidate in candidates) {
             val score = scores[candidate.id] ?: continue
             val exchange = bridge.exchange(candidate)
             exchange.isInput = flow.flowType == FlowType.PRODUCT_FLOW
             exchange.amount = score.pow(2.0) / (scoresTotal * maxScore)
         }
-
         ProcessDao(db).insert(bridge)
         log.info("Created bridge process {}", bridge.name)
     }
