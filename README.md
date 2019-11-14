@@ -40,7 +40,7 @@ of `B` are stored in the `_bridge` category so that it is easy to identify
 
 ![](images/the_bridge_category.png)
 
-For `p` it should be then possible to create a product system that uses the
+For `p`, it should be then possible to create a product system that uses the
 generated bridge processes `B` to connect `p` with `Q`:
 
 ![](images/product_system_of_p.png)
@@ -58,7 +58,7 @@ flow names that are relatively specific:
 
 However, flow names in LCA names often contain terms like `at plant` or
 `production mix` that will lead to imprecise results using this matcher
-with out a filter:
+without a filter:
 
 ![](images/concrete_dice.png)
 
@@ -72,14 +72,14 @@ I(w) = |w| * e^(-alpha * freq(w))
 ```
 
 `|w|` is the number of characters of `w` and `freq(w)` the absolute frequency of
-`w` in the flow names of `fq`. With this long words that are less frequent get
-a higher weight than terms like `at plant`. This fixes the `concrete`
-example above:
+`w` in the flow names of `fq`. With this, long words that are less frequent get
+a higher weight than terms like `at plant` when calculating the similarity
+between two flow names. This fixes the `concrete` example above:
 
 ![](images/concrete_info.png)
 
 However, words that have a high information content can describe completely
-different products:
+different things:
 
 ![](images/shaker_screen_info.png)
 
@@ -88,7 +88,7 @@ This matcher calculates the similarities between flow names based on the
 information content of the contained words as described above and a semantic
 similarity score that is calculated as the path distance between two words
 in [WordNet](https://wordnet.princeton.edu). It uses the
-[WS4j](https://code.google.com/archive/p/ws4j) API to calculate the path
+[WS4j](https://code.google.com/archive/p/ws4j) API to calculate this
 distance. The WordNet database that comes with WS4j is maybe a bit
 outdated. Also, technical terms that are common in LCA databases are often not
 present in WordNet. This is why this matcher currently does not give much
@@ -98,7 +98,7 @@ give good results (see e.g. [this paper](https://arxiv.org/pdf/1802.05667.pdf)).
 
 
 ## Running / building from source
-The easiest way to run this is to load the project into a current version
+The easiest way to run this project is to load it into a current version
 of [IntelliJ IDEA](https://www.jetbrains.com/idea/) (e.g. the open source
 community version). Adopt the process ID of `p` and the databases path
 in the [main function](src/main/kotlin/autoprox/Main.kt) and run it. In order
@@ -120,7 +120,8 @@ dict.open()
 val idxWord = dict.getIndexWord("asphalt", POS.NOUN)
 if (idxWord != null) {
     val word = dict.getWord(idxWord.wordIDs[0])
-    word.synset.relatedSynsets.
+    val relSynsets = word.synset.relatedSynsets
+    ...
 }
 ```
 
@@ -130,9 +131,10 @@ provides a more low level API (but with a nice
 [tutorial](http://projects.csail.mit.edu/jwi/download.php?f=edu.mit.jwi_2.4.0_manual.pdf)).
 
 WS4j is an archived project
-on [Google Code](https://code.google.com/archive/p/ws4j) bit there is also a [Github clone available](https://github.com/Sciss/ws4j)
-which seems to be the version that is published in the Maven central repository.
-In order to run WS4j, you need to put the configuration files
+on [Google Code](https://code.google.com/archive/p/ws4j) but there is also a
+[Github clone available](https://github.com/Sciss/ws4j) which seems to be the
+version that is published in the Maven central repository. In order to run WS4j,
+you need to put the configuration files
 [jawjaw.conf and similarity.conf](https://github.com/Sciss/ws4j/tree/master/config)
 and the database file `wnjpn.db` into the class-path. The `wnjpn.db` file can
 be extracted from the distribution packages from the
