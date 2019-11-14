@@ -84,11 +84,28 @@ different products:
 ![](images/shaker_screen_info.png)
 
 ### The `WordNetPathMatcher`
+This matcher calculates the similarities between flow names based on the
+information content of the contained words as described above and a semantic
+similarity score that is calculated as the path distance between two words
+in [WordNet](https://wordnet.princeton.edu). It uses the
+[WS4j](https://code.google.com/archive/p/ws4j) API to calculate the path
+distance. The WordNet database that comes with WS4j is maybe a bit
+outdated. Also, technical terms that are common in LCA databases are often not
+present in WordNet. This is why this matcher currently does not give much
+better results than the `InfoContentMatcher`. However, combining lexical
+matching, corpus statistics, and semantic similarities could in principal
+give good results (see e.g. [this paper](https://arxiv.org/pdf/1802.05667.pdf)). 
 
-The `WordNetPathMatcher` uses the [WS4j](https://code.google.com/archive/p/ws4j)
-API to calculate semantic similarities between words using
-[WordNet](https://wordnet.princeton.edu).
 
+## Running / building from source
+The easiest way to run this is to load the project into a current version
+of [IntelliJ IDEA](https://www.jetbrains.com/idea/) (e.g. the open source
+community version). Adopt the process ID of `p` and the databases path
+in the [main function](src/main/kotlin/autoprox/Main.kt) and run it. In order
+to use the `WordNetPathMatcher` you need to setup the WS4j database as described
+below.
+
+### WS4j
 WS4j is an archived Google Code project and a bit complicated to set up (see
 below) and is compatible with a relative old version of WordNet. An alternative
 could be [JWI](http://projects.csail.mit.edu/jwi/) which supports to load
@@ -112,12 +129,8 @@ However, WS4j provides a lot of features and
 provides a more low level API (but with a nice
 [tutorial](http://projects.csail.mit.edu/jwi/download.php?f=edu.mit.jwi_2.4.0_manual.pdf)).
 
-## Building from source
-
-### WS4j
-For calculating semantic similarities this project uses
-[WS4j](https://code.google.com/archive/p/ws4j). WS4j is an archived project
-on Google Code bit there is also a [Github clone available](https://github.com/Sciss/ws4j)
+WS4j is an archived project
+on [Google Code](https://code.google.com/archive/p/ws4j) bit there is also a [Github clone available](https://github.com/Sciss/ws4j)
 which seems to be the version that is published in the Maven central repository.
 In order to run WS4j, you need to put the configuration files
 [jawjaw.conf and similarity.conf](https://github.com/Sciss/ws4j/tree/master/config)
