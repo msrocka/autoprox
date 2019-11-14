@@ -1,9 +1,49 @@
 # autoprox
-For a process `p` in a database with a set of background processes `Q`,
-`autoprox` generates a set of bridge processes `B` as described in
+`autoprox` automatically generates bridge processes as described in
 [Ingwersen et al. 2018](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6463304/)
-that connect the product inputs and waste outputs of `p` with corresponding
-product outputs and waste inputs provided by the processes in `Q`.
+directly in [openLCA](https://github.com/GreenDelta/olca-app). 
+For a process `p` in a database with a set of background processes `Q`,
+`autoprox` generates a set of bridge processes `B` that connect the product
+inputs and waste outputs of `p` with corresponding product outputs and waste
+inputs provided by the processes in `Q`. This is done by a
+[Generator](src/main/kotlin/autoprox/Generator.kt) that takes the ID of the
+process `p` and [Matcher](src/main/kotlin/autoprox/Matcher.kt) `M` as input.
+For a product input or waste output `fp` of `p` that does not yet have a
+provider process in `Q`, the matcher `M` generates a set of flow-score pairs
+for the product outputs and waste inputs `fq` with a provider process in `Q`:
+
+```
+M: fp -> {(fq, sq) | fq in Q, sq in [0, 1]} 
+```
+
+The generator selects then the top matching flows of `fq` with the following
+rule where `epsilon` can be configured:
+
+```
+abs(1.0 - (sq_i / max(sq))) <= epsilon
+```
+
+A bridge process `b` is then generated that has a corresponding exchange for
+each of these matching product outputs or waste inputs. The quantitative
+reference of `b` is set to one unit of `fp` and the amount of a matching flow
+`fq_i` is set to:
+
+```
+sq_i^2 / (sum(sq) * max(sq))
+```
+
+Only flows are currently selected that have the same reference flow property
+as `fp` so that every amount in `b` has the same unit. The name of `b` is
+set to the name of the reference flow with a `_bridge:` prefix and all processes
+of `B` are stored in the `_bridge` category so that it is easy to identify
+(and delete) them:
+
+![](images/the_bridge_category.png)
+
+For `p` it should be then possible to create a product system that uses the
+generated bridge processes `B` to connect `p` with `Q`:
+
+![](images/product_system_of_p.png)
 
 ## Implemented matchers
 
