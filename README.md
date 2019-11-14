@@ -48,8 +48,40 @@ generated bridge processes `B` to connect `p` with `Q`:
 ## Implemented matchers
 
 ### The `BigramsDiceMatcher`
+This matcher extracts the [bigrams](https://en.wikipedia.org/wiki/Bigram) from
+the words of the names of the flows that are compared and computes the
+[Sørensen–Dice coefficient](https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient)
+of these sets of bigrams. It is fast and simple and gives good results for
+flow names that are relatively specific:
+
+![](images/asphalt_dice.png)
+
+However, flow names in LCA names often contain terms like `at plant` or
+`production mix` that will lead to imprecise results using this matcher
+with out a filter:
+
+![](images/concrete_dice.png)
+
 
 ### The `InfoContentMatcher`
+The `InfoContentMatcher` computes the information content `I(w)` of a word `w`
+as:
+
+```
+I(w) = |w| * e^(-alpha * freq(w))
+```
+
+`|w|` is the number of characters of `w` and `freq(w)` the absolute frequency of
+`w` in the flow names of `fq`. With this long words that are less frequent get
+a higher weight than terms like `at plant`. This fixes the `concrete`
+example above:
+
+![](images/concrete_info.png)
+
+However, words that have a high information content can describe completely
+different products:
+
+![](images/shaker_screen_info.png)
 
 ### The `WordNetPathMatcher`
 
